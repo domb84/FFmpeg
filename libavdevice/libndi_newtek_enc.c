@@ -24,8 +24,11 @@
 #include "libavformat/internal.h"
 #include "libavutil/opt.h"
 #include "libavutil/imgutils.h"
+#include "libavformat/mux.h"
+#include "libavutil/frame.h"
 
 #include "libndi_newtek_common.h"
+#include <Processing.NDI.Lib.h>
 
 struct NDIContext {
     const AVClass *cclass;
@@ -145,7 +148,7 @@ static int ndi_setup_audio(AVFormatContext *avctx, AVStream *st)
         return AVERROR(ENOMEM);
 
     ctx->audio->sample_rate = c->sample_rate;
-    ctx->audio->no_channels = c->channels;
+    ctx->audio->no_channels = c->ch_layout.nb_channels;
     ctx->audio->reference_level = ctx->reference_level;
 
     avpriv_set_pts_info(st, 64, 1, NDI_TIME_BASE);
@@ -285,14 +288,14 @@ static const AVClass libndi_newtek_muxer_class = {
     .category   = AV_CLASS_CATEGORY_DEVICE_VIDEO_OUTPUT,
 };
 
-AVOutputFormat ff_libndi_newtek_muxer = {
-    .name           = "libndi_newtek",
-    .long_name      = NULL_IF_CONFIG_SMALL("Network Device Interface (NDI) output using NewTek library"),
-    .audio_codec    = AV_CODEC_ID_PCM_S16LE,
-    .video_codec    = AV_CODEC_ID_WRAPPED_AVFRAME,
-    .subtitle_codec = AV_CODEC_ID_NONE,
-    .flags          = AVFMT_NOFILE,
-    .priv_class     = &libndi_newtek_muxer_class,
+const FFOutputFormat ff_libndi_newtek_muxer = {
+    .p.name           = "libndi_newtek",
+    .p.long_name      = NULL_IF_CONFIG_SMALL("Network Device Interface (NDI) output using NewTek library"),
+    .p.audio_codec    = AV_CODEC_ID_PCM_S16LE,
+    .p.video_codec    = AV_CODEC_ID_WRAPPED_AVFRAME,
+    .p.subtitle_codec = AV_CODEC_ID_NONE,
+    .p.flags          = AVFMT_NOFILE,
+    .p.priv_class     = &libndi_newtek_muxer_class,
     .priv_data_size = sizeof(struct NDIContext),
     .write_header   = ndi_write_header,
     .write_packet   = ndi_write_packet,

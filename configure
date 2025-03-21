@@ -4845,6 +4845,7 @@ armasm_flags(){
             # Filter out MSVC cl.exe options from cflags that shouldn't
             # be passed to gas-preprocessor
             -M[TD]*)                                            ;;
+            -Q*) ;;
             *)                  echo $flag                      ;;
         esac
    done
@@ -8422,3 +8423,4 @@ for lib in $LIBRARY_LIST; do
 done
 
 cp_if_changed $TMPH ffbuild/config.sh
+
