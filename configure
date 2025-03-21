@@ -337,6 +337,7 @@ External library support:
   --enable-vapoursynth     enable VapourSynth demuxer [no]
   --disable-xlib           disable xlib [autodetect]
   --disable-zlib           disable zlib [autodetect]
+  --enable-libndi_newtek   enable Newteck NDI I/O support [no]
 
   The following libraries provide various hardware acceleration features:
   --disable-amf            disable AMF video encoding code [autodetect]
@@ -1882,6 +1883,7 @@ EXTERNAL_LIBRARY_NONFREE_LIST="
     decklink
     libfdk_aac
     libtls
+    libndi_newtek
 "
 
 EXTERNAL_LIBRARY_VERSION3_LIST="
@@ -3790,6 +3792,10 @@ vfwcap_indev_deps="vfw32 vfwcap_defines"
 xcbgrab_indev_deps="libxcb"
 xcbgrab_indev_suggest="libxcb_shm libxcb_shape libxcb_xfixes"
 xv_outdev_deps="xlib_xv xlib_x11 xlib_xext"
+libndi_newtek_indev_deps="libndi_newtek"
+libndi_newtek_indev_extralibs="-lndi"
+libndi_newtek_outdev_deps="libndi_newtek"
+libndi_newtek_outdev_extralibs="-lndi"
 
 # protocols
 android_content_protocol_deps="jni"
@@ -6965,6 +6971,7 @@ enabled libkvazaar        && require_pkg_config libkvazaar "kvazaar >= 2.0.0" kv
 enabled liblc3            && require_pkg_config liblc3 "lc3 >= 1.1.0" lc3.h lc3_hr_setup_encoder
 enabled liblensfun        && require_pkg_config liblensfun lensfun lensfun.h lf_db_create
 enabled liblcevc_dec      && require_pkg_config liblcevc_dec "lcevc_dec >= 2.0.0" "LCEVC/lcevc_dec.h" LCEVC_CreateDecoder
+enabled libndi_newtek     && require_headers Processing.NDI.Lib.h
 
 if enabled libmfx && enabled libvpl; then
    die "ERROR: can not use libmfx and libvpl together"

@@ -50,6 +50,8 @@ OBJS-$(CONFIG_V4L2_OUTDEV)               += v4l2enc.o v4l2-common.o
 OBJS-$(CONFIG_VFWCAP_INDEV)              += vfwcap.o
 OBJS-$(CONFIG_XCBGRAB_INDEV)             += xcbgrab.o
 OBJS-$(CONFIG_XV_OUTDEV)                 += xv.o
+OBJS-$(CONFIG_LIBNDI_NEWTEK_OUTDEV)      += libndi_newtek_enc.o
+OBJS-$(CONFIG_LIBNDI_NEWTEK_INDEV)       += libndi_newtek_dec.o
 
 # external libraries
 OBJS-$(CONFIG_LIBCDIO_INDEV)             += libcdio.o
@@ -73,5 +75,7 @@ SKIPHEADERS-$(CONFIG_V4L2_INDEV)         += v4l2-common.h
 SKIPHEADERS-$(CONFIG_V4L2_OUTDEV)        += v4l2-common.h
 SKIPHEADERS-$(CONFIG_ALSA)               += alsa.h
 SKIPHEADERS-$(CONFIG_SNDIO)              += sndio.h
+SKIPHEADERS-$(CONFIG_LIBNDI_NEWTEK_INDEV) += libndi_newtek_common.h
+SKIPHEADERS-$(CONFIG_LIBNDI_NEWTEK_OUTDEV) += libndi_newtek_common.h
 
 TESTPROGS-$(CONFIG_JACK_INDEV)           += timefilter
