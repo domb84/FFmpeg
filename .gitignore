@@ -46,3 +46,4 @@
 /libavfilter/vulkan/*.c
 Output/*
 .vscode/settings.json
+Build/*
