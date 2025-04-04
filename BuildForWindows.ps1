@@ -11,6 +11,7 @@ $msys2_bin = "$msys2_root\usr\bin"
 $msys2_shell = "$msys2_root\msys2_shell.cmd"
 $env:MSYS2_BIN = "$msys2_bin\bash.exe"
 $link = "$msys2_bin\link.exe"
+(Get-Content $msys2_shell).replace('rem set MSYS2_PATH_TYPE=inherit', 'set MSYS2_PATH_TYPE=inherit') | Set-Content $msys2_shell
 
 # # Update packages
 # Write-Host 'Updating packages...'
@@ -71,11 +72,10 @@ if ($appFound -ne $true) {
 
 
 # # Copy NDI SDK files to MSYS2
-# copy-item -Recurse -Verbose "C:\Program Files\NDI\NDI 6 SDK\Include\" -Destination "C:\tools\msys64\opt\"
-# copy-item -Recurse -Verbose "C:\Program Files\NDI\NDI 6 SDK\Lib\x64\" -Destination  "C:\tools\msys64\opt\"
-
-if (-not(Test-Path "C:\msys64\opt\ndi.lib")) {
-    copy-item -Verbose "C:\msys64\opt\Processing.NDI.Lib.x64.lib" -Destination "C:\msys64\opt\ndi.lib"
+copy-item -Recurse -Verbose "C:\Program Files\NDI\NDI 6 SDK\Include\*" -Destination "C:\tools\msys64\opt\"
+copy-item -Recurse -Verbose "C:\Program Files\NDI\NDI 6 SDK\Lib\x64\*" -Destination  "C:\tools\msys64\opt\"
+if (-not(Test-Path "C:\tools\msys64\opt\ndi.lib")) {
+    copy-item -Verbose "C:\tools\msys64\opt\Processing.NDI.Lib.x64.lib" -Destination "C:\tools\msys64\opt\ndi.lib"
 }
 
 
@@ -118,40 +118,40 @@ Import-Module "$($vsInstance.InstallationPath)\Common7\Tools\Microsoft.VisualStu
 
 # Initialize the build environment
 Enter-VsDevShell `
-    -VsInstallPath $vsInstance.InstallationPath
+    -VsInstallPath $vsInstance.InstallationPath `
+    -DevCmdArguments "-arch=x64 -host_arch=x64" `
+    -SkipAutomaticLocation
 
 # Export full current PATH from environment into MSYS2 and set compiler to mingw64
 $env:MSYS2_PATH_TYPE = 'inherit'
 $env:MSYSTEM = "MINGW64"
 
 # Build FFmpeg
-& $env:MSYS2_BIN --login -x "/FFmpeg/configure" "--arch=x86_64" "--target-os=win64" "--enable-cross-compile" "--toolchain=msvc" "--enable-shared" "--disable-encoders" "--disable-filters" "--disable-muxers" "--enable-libndi_newtek" "--extra-cflags='-I/opt/'" "--extra-ldflags='/LIBPATH:C:/tools/msys64/opt/'" "--extra-ldflags='-CETCOMPAT'"
-& $env:MSYS2_BIN --login -x "make" "-j``nproc``" "install"
+# "--enable-shared" `
+# "--enable-cross-compile" `
 
-$buildResult = $?
+& $env:MSYS2_BIN --login -x "/FFmpeg/configure" `
+"--arch=x64" `
+"--target-os=win64" `
+"--enable-shared" `
+"--toolchain=msvc" `
+"--disable-encoders" `
+"--disable-avfilter" `
+"--disable-postproc" `
+"--disable-filters" `
+"--disable-muxers" `
+"--disable-decoders" `
+"--enable-decoder=h264*,hevc*,pcm*,aac,dolby_e" `
+"--disable-swresample" `
+"--disable-swscale" `
+"--disable-doc" `
+"--enable-libndi_newtek" `
+"--disable-ffprobe" `
+"--disable-ffplay" `
+"--disable-autodetect" `
+"--extra-cflags='-I/opt/ -GUARD:CF -Qspectre -Gy -Gw -DWINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP'" `
+"--extra-ldflags='/LIBPATH:C:/tools/msys64/opt/ -CETCOMPAT -PROFILE -GUARD:CF -DYNAMICBASE -OPT:ICF -OPT:REF'"
 
-# TODO: Fix below build issue
-# INSTALL libavformat/avformat.dll
-# LD      libavdevice/avdevice-61.dll
-#    Creating library libavdevice/avdevice.lib and object libavdevice/avdevice.exp
-# libndi_newtek_dec.o : error LNK2019: unresolved external symbol __imp__NDIlib_initialize referenced in function _ndi_read_header
-# libndi_newtek_enc.o : error LNK2001: unresolved external symbol __imp__NDIlib_initialize
-# libndi_newtek_dec.o : error LNK2019: unresolved external symbol __imp__NDIlib_find_destroy referenced in function _ndi_read_close
-# libndi_newtek_dec.o : error LNK2019: unresolved external symbol __imp__NDIlib_find_get_current_sources referenced in function _ndi_read_header
-# libndi_newtek_dec.o : error LNK2019: unresolved external symbol __imp__NDIlib_find_wait_for_sources referenced in function _ndi_read_header
-# libndi_newtek_dec.o : error LNK2019: unresolved external symbol __imp__NDIlib_recv_create_v3 referenced in function _ndi_read_header
-# libndi_newtek_dec.o : error LNK2019: unresolved external symbol __imp__NDIlib_recv_destroy referenced in function _ndi_read_close
-# libndi_newtek_dec.o : error LNK2019: unresolved external symbol __imp__NDIlib_recv_capture_v2 referenced in function _ndi_read_packet
-# libndi_newtek_dec.o : error LNK2019: unresolved external symbol __imp__NDIlib_recv_free_video_v2 referenced in function _ndi_read_packet
-# libndi_newtek_dec.o : error LNK2019: unresolved external symbol __imp__NDIlib_recv_free_metadata referenced in function _ndi_read_packet
-# libndi_newtek_dec.o : error LNK2019: unresolved external symbol __imp__NDIlib_recv_set_tally referenced in function _ndi_read_header
-# libndi_newtek_dec.o : error LNK2019: unresolved external symbol __imp__NDIlib_find_create2 referenced in function _ndi_read_header
-# libndi_newtek_dec.o : error LNK2019: unresolved external symbol __imp__NDIlib_recv_free_audio referenced in function _ndi_read_packet
-# libndi_newtek_dec.o : error LNK2019: unresolved external symbol __imp__NDIlib_util_audio_to_interleaved_16s referenced in function _ndi_read_packet
-# libndi_newtek_enc.o : error LNK2019: unresolved external symbol __imp__NDIlib_send_create referenced in function _ndi_write_header
-# libndi_newtek_enc.o : error LNK2019: unresolved external symbol __imp__NDIlib_send_destroy referenced in function _ndi_write_trailer
-# libndi_newtek_enc.o : error LNK2019: unresolved external symbol __imp__NDIlib_send_send_video_async_v2 referenced in function _ndi_write_packet
-# libndi_newtek_enc.o : error LNK2019: unresolved external symbol __imp__NDIlib_util_send_send_audio_interleaved_16s referenced in function _ndi_write_packet
-# C:\tools\msys64\opt\\ndi.lib : warning LNK4272: library machine type 'x64' conflicts with target machine type 'x86'
-# libavdevice\avdevice-61.dll : fatal error LNK1120: 17 unresolved externals
-# make: *** [/FFmpeg/ffbuild/library.mak:132: libavdevice/avdevice-61.dll] Error 96
+& $env:MSYS2_BIN --login -x # "make" "-j``nproc``" "install"
+
+# $buildResult = $?
