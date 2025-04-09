@@ -28,24 +28,18 @@ $link = "$msys2_bin\link.exe"
 #     Start-Process -Wait $msys2_shell -ArgumentList "-mingw64 -c `"pacman -S $package --noconfirm`""
 # }
 
-# # Rename link.exe to prevent conflict with MSVC
-if (Test-Path $link)
-{
-    Write-Host "Renaming $link..."
-    Rename-Item -Path $link -NewName "$link.0000"
-}
-
-# Set MSYS2_BIN environment variable
-Write-Host 'Setting MSYS2_BIN environment variable...'
-#[System.Environment]::SetEnvironmentVariable('MSYS2_BIN', "$msys2_bin\bash.exe", "User")
-$env:MSYS2_BIN = "$msys2_bin\bash.exe"
+# # # Rename link.exe to prevent conflict with MSVC
+# if (Test-Path $link)
+# {
+#     Write-Host "Renaming $link..."
+#     Rename-Item -Path $link -NewName "$link.0000"
+# }
 
 # Install ndi sdk
 $ndiInstallerPath = "$env:TEMP\ndisdk.exe"
 $appFound = ((Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*).DisplayName -Match "NDI 6 SDK").Length -gt 0
 if ($appFound -ne $true) {
   try{
-    # Download the file
     if (-not(Test-Path $ndiInstallerPath))
     {
         Invoke-WebRequest -Uri $ndiSdkUrl -OutFile $ndiInstallerPath
@@ -70,8 +64,7 @@ if ($appFound -ne $true) {
   }
 }
 
-
-# # Copy NDI SDK files to MSYS2
+# Copy NDI SDK files to MSYS2
 copy-item -Recurse -Verbose "C:\Program Files\NDI\NDI 6 SDK\Include\*" -Destination "C:\tools\msys64\opt\"
 copy-item -Recurse -Verbose "C:\Program Files\NDI\NDI 6 SDK\Lib\x64\*" -Destination  "C:\tools\msys64\opt\"
 if (-not(Test-Path "C:\tools\msys64\opt\ndi.lib")) {
@@ -127,31 +120,50 @@ $env:MSYS2_PATH_TYPE = 'inherit'
 $env:MSYSTEM = "MINGW64"
 
 # Build FFmpeg
-# "--enable-shared" `
-# "--enable-cross-compile" `
-
 & $env:MSYS2_BIN --login -x "/FFmpeg/configure" `
 "--arch=x64" `
 "--target-os=win64" `
 "--enable-shared" `
 "--toolchain=msvc" `
 "--disable-encoders" `
-"--disable-avfilter" `
 "--disable-postproc" `
 "--disable-filters" `
 "--disable-muxers" `
 "--disable-decoders" `
-"--enable-decoder=h264*,hevc*,pcm*,aac,dolby_e" `
-"--disable-swresample" `
-"--disable-swscale" `
+"--enable-decoder=h264*" `
+"--enable-decoder=hevc*" `
+"--enable-decoder=pcm*" `
+"--enable-decoder=aac" `
+"--enable-decoder=dolby_e" `
 "--disable-doc" `
 "--enable-libndi_newtek" `
 "--disable-ffprobe" `
 "--disable-ffplay" `
 "--disable-autodetect" `
-"--extra-cflags='-I/opt/ -GUARD:CF -Qspectre -Gy -Gw -DWINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP'" `
-"--extra-ldflags='/LIBPATH:C:/tools/msys64/opt/ -CETCOMPAT -PROFILE -GUARD:CF -DYNAMICBASE -OPT:ICF -OPT:REF'"
-
+"--prefix=ffmpeg" `
+"--bindir=ffmpeg" `
+"--extra-cflags=-I/opt/" `
+"--extra-ldflags=/LIBPATH:C:/tools/msys64/opt/"
 & $env:MSYS2_BIN --login -x # "make" "-j``nproc``" "install"
+
+# # Build ffplay
+# & $env:MSYS2_BIN --login -x "/FFmpeg/configure" `
+# "--arch=x64" `
+# "--target-os=win64" `
+# "--disable-shared" `
+# "--enable-sdl" `
+# "--enable-static" `
+# "--toolchain=msvc" `
+# "--disable-all" `
+# "--enable-ffplay" `
+# "--disable-autodetect" `
+# "--prefix=ffplay" `
+# "--bindir=ffplay" `
+# "--extra-cflags=-I/opt/" `
+# "--extra-ldflags=/LIBPATH:C:/tools/msys64/opt/"
+
+# & $env:MSYS2_BIN --login -x # "make" "-j``nproc``" "install"
+
+# ./configure --enable-ffplay --toolchain=msvc --disable-shared --enable-static --enable-sdl --extra-ldflags="-Wl,-add-stdcall-alias" --enable-memalign-hack --disable-ffmpeg --pkg-config=sdl-config
 
 # $buildResult = $?
